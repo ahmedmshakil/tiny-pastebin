@@ -1,0 +1,26 @@
+{{define "layout"}}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{{.Title}}</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/static/app.css">
+  <script defer src="/static/highlight.min.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <h1><a href="/">Tiny Pastebin</a></h1>
+  </header>
+  <main class="site-main">
+    {{.Body}}
+  </main>
+  <footer class="site-footer">
+    <p>Self-hosted pastebin – no external services.</p>
+  </footer>
+</body>
+</html>
+{{end}}

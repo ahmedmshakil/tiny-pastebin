@@ -1,0 +1,44 @@
+{{define "view-body"}}
+  <section class="card">
+    <header class="card-header">
+      <h2>Paste {{.Paste.ID}}</h2>
+      <div class="actions">
+        <a class="btn" href="/p/{{.Paste.ID}}/raw">Raw</a>
+        <button class="btn" id="copy-btn" type="button">Copy</button>
+        <a class="btn" href="/p/{{.Paste.ID}}/qr">QR</a>
+      </div>
+    </header>
+    <div class="meta">
+      <dl>
+        <div><dt>Syntax</dt><dd>{{.SyntaxLabel}}</dd></div>
+        <div><dt>Size</dt><dd>{{formatSize .Paste.Size}}</dd></div>
+        <div><dt>Created</dt><dd>{{formatTime .Paste.CreatedAt}}</dd></div>
+        <div><dt>Expires</dt><dd>{{formatTime .Paste.ExpiresAt}}</dd></div>
+        <div><dt>Time remaining</dt><dd>{{.ExpiresIn}}</dd></div>
+      </dl>
+      <p class="muted canonical">Share URL: <a href="{{.Canonical}}">{{.Canonical}}</a></p>
+    </div>
+    <pre class="code"><code class="language-{{.Paste.Syntax}}">{{.Paste.Content}}</code></pre>
+  </section>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.hljs && hljs.highlightAll) {
+        hljs.highlightAll();
+      }
+      var copyBtn = document.getElementById('copy-btn');
+      var code = document.querySelector('pre.code code');
+      if (!copyBtn || !code) {
+        return;
+      }
+      copyBtn.addEventListener('click', function () {
+        navigator.clipboard.writeText(code.textContent).then(function () {
+          copyBtn.textContent = 'Copied!';
+          setTimeout(function () { copyBtn.textContent = 'Copy'; }, 1500);
+        }).catch(function () {
+          copyBtn.textContent = 'Copy failed';
+          setTimeout(function () { copyBtn.textContent = 'Copy'; }, 1500);
+        });
+      });
+    });
+  </script>
+{{end}}

@@ -1,0 +1,42 @@
+# Go build
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go modules
+go.sum
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database files
+tiny-paste.db
+pastes.sqlite
+data/
+
+# Docker
+*.log
+
+# Test cache
+__pycache__/
+*.pyc
+
+# Coverage
+coverage.out
+
+# Misc
+*.env
+.env*
