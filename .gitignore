@@ -40,3 +40,4 @@ coverage.out
 # Misc
 *.env
 .env*
+tinypaste
