@@ -1,35 +1,134 @@
 {{define "index-body"}}
-  <section class="card">
-    <h2>Create a paste</h2>
+  <div class="create-paste-container">
+    <div class="page-header">
+      <h2 class="page-title">Create New Paste</h2>
+      <p class="page-subtitle">Share code, text, and snippets securely</p>
+    </div>
+
     {{if .Error}}
-      <p class="flash flash-error">{{.Error}}</p>
+      <div class="alert alert-error">
+        <span class="alert-message">{{.Error}}</span>
+      </div>
     {{end}}
-    <form method="post" action="/pastes" class="form">
-      <label for="content">Content <span class="muted">(max {{.MaxBytes}} bytes)</span></label>
-      <textarea id="content" name="content" rows="14" required>{{.Content}}</textarea>
 
-      <div class="form-row">
-        <label for="syntax">Syntax</label>
-        <select id="syntax" name="syntax">
-          {{range .SyntaxOptions}}
-            <option value="{{.Value}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>
-          {{end}}
-        </select>
-      </div>
+    <div class="form-container">
+      <form method="post" action="/pastes" class="paste-form" id="paste-form">
+        <div class="form-section">
+          <div class="form-group">
+            <label for="content" class="form-label">
+              Content
+              <span class="char-counter">
+                <span id="char-count">0</span> / <span class="max-chars">{{.MaxBytes}}</span> bytes
+              </span>
+            </label>
+            <div class="textarea-container">
+              <textarea 
+                id="content" 
+                name="content" 
+                required 
+                placeholder="Paste your code, text, or snippet here..."
+                spellcheck="false">{{.Content}}</textarea>
+            </div>
+          </div>
 
-      <div class="form-row">
-        <label for="expire">Expires</label>
-        <select id="expire" name="expire">
-          {{range .ExpireOptions}}
-            <option value="{{.Value}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>
-          {{end}}
-        </select>
-      </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="syntax" class="form-label">Language</label>
+              <select id="syntax" name="syntax" class="form-select">
+                {{range .SyntaxOptions}}
+                  <option value="{{.Value}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>
+                {{end}}
+              </select>
+            </div>
 
-      <label for="password">Password <span class="muted">(optional)</span></label>
-      <input id="password" name="password" type="password" autocomplete="off" placeholder="Enter password">
+            <div class="form-group">
+              <label for="expire" class="form-label">Expires</label>
+              <select id="expire" name="expire" class="form-select">
+                {{range .ExpireOptions}}
+                  <option value="{{.Value}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>
+                {{end}}
+              </select>
+            </div>
+          </div>
 
-      <button type="submit" class="btn">Create paste</button>
-    </form>
-  </section>
+          <div class="form-group">
+            <label for="password" class="form-label">
+              Password Protection 
+              <span class="optional">(optional)</span>
+            </label>
+            <input 
+              id="password" 
+              name="password" 
+              type="password" 
+              autocomplete="new-password"
+              class="form-input"
+              placeholder="Enter password to protect this paste">
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="submit-btn">
+              Create Paste
+            </button>
+            <button type="button" class="btn btn-secondary" id="clear-btn">
+              Clear
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const content = document.getElementById('content');
+      const charCount = document.getElementById('char-count');
+      const maxChars = {{.MaxBytes}};
+      const submitBtn = document.getElementById('submit-btn');
+      const clearBtn = document.getElementById('clear-btn');
+      const form = document.getElementById('paste-form');
+
+      // Character counter
+      function updateCharCount() {
+        const count = new Blob([content.value]).size;
+        charCount.textContent = count.toLocaleString();
+        
+        if (count > maxChars) {
+          charCount.parentElement.classList.add('over-limit');
+          submitBtn.disabled = true;
+        } else {
+          charCount.parentElement.classList.remove('over-limit');
+          submitBtn.disabled = false;
+        }
+      }
+
+      content.addEventListener('input', updateCharCount);
+      updateCharCount();
+
+      // Clear form
+      clearBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to clear all content?')) {
+          content.value = '';
+          document.getElementById('password').value = '';
+          updateCharCount();
+          content.focus();
+        }
+      });
+
+      // Auto-focus content area
+      content.focus();
+
+      // Form submission with loading state
+      form.addEventListener('submit', () => {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating...';
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          form.submit();
+        }
+      });
+    });
+  </script>
 {{end}}

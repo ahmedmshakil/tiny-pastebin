@@ -1,43 +1,234 @@
 {{define "view-body"}}
-  <section class="card">
-    <header class="card-header">
-      <h2>Paste {{.Paste.ID}}</h2>
-      <div class="actions">
-        <a class="btn" href="/p/{{.Paste.ID}}/raw">Raw</a>
-        <button class="btn" id="copy-btn" type="button">Copy</button>
-        <a class="btn" href="/p/{{.Paste.ID}}/qr">QR</a>
+  <div class="paste-view-container">
+    <div class="paste-header">
+      <div class="paste-info">
+        <h2 class="paste-title">📄 Paste: <code class="paste-id">{{.Paste.ID}}</code></h2>
+        <div class="paste-meta">
+          <span class="meta-item">
+            <span class="meta-icon">🏷️</span>
+            {{.SyntaxLabel}}
+          </span>
+          <span class="meta-item">
+            <span class="meta-icon">📏</span>
+            {{formatSize .Paste.Size}}
+          </span>
+          <span class="meta-item">
+            <span class="meta-icon">📅</span>
+            {{formatTime .Paste.CreatedAt}}
+          </span>
+          {{if not .Paste.ExpiresAt.IsZero}}
+          <span class="meta-item expires">
+            <span class="meta-icon">⏰</span>
+            {{.ExpiresIn}}
+          </span>
+          {{end}}
+        </div>
       </div>
-    </header>
-    <div class="meta">
-      <dl>
-        <div><dt>Syntax</dt><dd>{{.SyntaxLabel}}</dd></div>
-        <div><dt>Size</dt><dd>{{formatSize .Paste.Size}}</dd></div>
-        <div><dt>Created</dt><dd>{{formatTime .Paste.CreatedAt}}</dd></div>
-        <div><dt>Expires</dt><dd>{{formatTime .Paste.ExpiresAt}}</dd></div>
-        <div><dt>Time remaining</dt><dd>{{.ExpiresIn}}</dd></div>
-      </dl>
-      <p class="muted canonical">Share URL: <a href="{{.Canonical}}">{{.Canonical}}</a></p>
+      
+      <div class="paste-actions">
+        <button class="action-btn primary" id="copy-btn" title="Copy content to clipboard">
+          <span class="action-icon">📋</span>
+          <span class="action-text">Copy</span>
+        </button>
+        <a class="action-btn" href="/p/{{.Paste.ID}}/raw" title="View raw content">
+          <span class="action-icon">📝</span>
+          <span class="action-text">Raw</span>
+        </a>
+        <a class="action-btn" href="/p/{{.Paste.ID}}/qr" title="QR code for sharing">
+          <span class="action-icon">📱</span>
+          <span class="action-text">QR Code</span>
+        </a>
+        <button class="action-btn" id="share-btn" title="Share URL">
+          <span class="action-icon">🔗</span>
+          <span class="action-text">Share</span>
+        </button>
+      </div>
     </div>
-    <pre class="code"><code class="language-{{.Paste.Syntax}}">{{.Paste.Content}}</code></pre>
-  </section>
+
+    <div class="code-container">
+      <div class="code-header">
+        <div class="code-info">
+          <span class="language-badge">{{.SyntaxLabel}}</span>
+          <button class="toggle-wrap" id="wrap-toggle" title="Toggle line wrapping">
+            <span class="wrap-icon">↩️</span>
+          </button>
+        </div>
+        <div class="code-actions">
+          <button class="code-action" id="select-all" title="Select all">
+            <span>📄</span>
+          </button>
+          <button class="code-action" id="download-btn" title="Download as file">
+            <span>💾</span>
+          </button>
+        </div>
+      </div>
+      
+      <pre class="code-block" id="code-block"><code class="language-{{.Paste.Syntax}}" id="paste-content">{{.Paste.Content}}</code></pre>
+    </div>
+
+    <div class="share-info">
+      <div class="share-section">
+        <label class="share-label">🔗 Share URL:</label>
+        <div class="url-container">
+          <input type="text" class="share-url" id="share-url" value="{{.Canonical}}" readonly>
+          <button class="copy-url-btn" id="copy-url-btn" title="Copy URL">📋</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize syntax highlighting
       if (window.hljs && hljs.highlightAll) {
         hljs.highlightAll();
       }
-      var copyBtn = document.getElementById('copy-btn');
-      var code = document.querySelector('pre.code code');
-      if (!copyBtn || !code) {
-        return;
-      }
-      copyBtn.addEventListener('click', function () {
-        navigator.clipboard.writeText(code.textContent).then(function () {
-          copyBtn.textContent = 'Copied!';
-          setTimeout(function () { copyBtn.textContent = 'Copy'; }, 1500);
-        }).catch(function () {
-          copyBtn.textContent = 'Copy failed';
-          setTimeout(function () { copyBtn.textContent = 'Copy'; }, 1500);
+
+      const copyBtn = document.getElementById('copy-btn');
+      const shareBtn = document.getElementById('share-btn');
+      const copyUrlBtn = document.getElementById('copy-url-btn');
+      const shareUrl = document.getElementById('share-url');
+      const selectAllBtn = document.getElementById('select-all');
+      const downloadBtn = document.getElementById('download-btn');
+      const wrapToggle = document.getElementById('wrap-toggle');
+      const codeBlock = document.getElementById('code-block');
+      const pasteContent = document.getElementById('paste-content');
+
+      // Copy content functionality
+      if (copyBtn && pasteContent) {
+        copyBtn.addEventListener('click', function() {
+          navigator.clipboard.writeText(pasteContent.textContent).then(() => {
+            showSuccess(copyBtn, '✅ Copied!', '📋 Copy');
+          }).catch(() => {
+            showError(copyBtn, '❌ Failed', '📋 Copy');
+          });
         });
+      }
+
+      // Copy URL functionality
+      if (copyUrlBtn && shareUrl) {
+        copyUrlBtn.addEventListener('click', function() {
+          shareUrl.select();
+          navigator.clipboard.writeText(shareUrl.value).then(() => {
+            showSuccess(copyUrlBtn, '✅', '📋');
+          }).catch(() => {
+            showError(copyUrlBtn, '❌', '📋');
+          });
+        });
+      }
+
+      // Share functionality
+      if (shareBtn) {
+        shareBtn.addEventListener('click', function() {
+          if (navigator.share) {
+            navigator.share({
+              title: 'Shared Paste - {{.Paste.ID}}',
+              url: '{{.Canonical}}'
+            });
+          } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText('{{.Canonical}}').then(() => {
+              showSuccess(shareBtn, '🔗 Copied!', '🔗 Share');
+            });
+          }
+        });
+      }
+
+      // Select all text
+      if (selectAllBtn && pasteContent) {
+        selectAllBtn.addEventListener('click', function() {
+          const range = document.createRange();
+          range.selectNodeContents(pasteContent);
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+          showSuccess(selectAllBtn, '✅', '📄');
+        });
+      }
+
+      // Download as file
+      if (downloadBtn && pasteContent) {
+        downloadBtn.addEventListener('click', function() {
+          const content = pasteContent.textContent;
+          const syntax = '{{.Paste.Syntax}}';
+          const extension = getFileExtension(syntax);
+          const filename = `paste-{{.Paste.ID}}.${extension}`;
+          
+          const blob = new Blob([content], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          URL.revokeObjectURL(url);
+          
+          showSuccess(downloadBtn, '💾 Downloaded!', '💾');
+        });
+      }
+
+      // Toggle line wrapping
+      if (wrapToggle && codeBlock) {
+        wrapToggle.addEventListener('click', function() {
+          codeBlock.classList.toggle('wrap-lines');
+          const isWrapped = codeBlock.classList.contains('wrap-lines');
+          wrapToggle.innerHTML = `<span class="wrap-icon">${isWrapped ? '↪️' : '↩️'}</span>`;
+          wrapToggle.title = isWrapped ? 'Disable line wrapping' : 'Enable line wrapping';
+        });
+      }
+
+      // Utility functions
+      function showSuccess(element, successText, originalText) {
+        const original = element.innerHTML;
+        element.innerHTML = successText;
+        element.classList.add('success');
+        setTimeout(() => {
+          element.innerHTML = original;
+          element.classList.remove('success');
+        }, 2000);
+      }
+
+      function showError(element, errorText, originalText) {
+        const original = element.innerHTML;
+        element.innerHTML = errorText;
+        element.classList.add('error');
+        setTimeout(() => {
+          element.innerHTML = original;
+          element.classList.remove('error');
+        }, 2000);
+      }
+
+      function getFileExtension(syntax) {
+        const extensions = {
+          'javascript': 'js',
+          'typescript': 'ts',
+          'python': 'py',
+          'go': 'go',
+          'java': 'java',
+          'c': 'c',
+          'cpp': 'cpp',
+          'html': 'html',
+          'css': 'css',
+          'json': 'json',
+          'yaml': 'yml',
+          'markdown': 'md',
+          'bash': 'sh',
+          'sql': 'sql'
+        };
+        return extensions[syntax] || 'txt';
+      }
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+          e.preventDefault();
+          selectAllBtn.click();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+          if (!window.getSelection().toString()) {
+            e.preventDefault();
+            copyBtn.click();
+          }
+        }
       });
     });
   </script>

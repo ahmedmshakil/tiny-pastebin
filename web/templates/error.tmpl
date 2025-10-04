@@ -1,6 +1,77 @@
 {{define "error-body"}}
-  <section class="card">
-    <h2>{{.Message}}</h2>
-    <p><a href="/">Go back home</a></p>
-  </section>
+  <div class="error-container">
+    <div class="error-card">
+      <div class="error-icon">Error</div>
+      <h2 class="error-title">{{.Message}}</h2>
+      <p class="error-description">
+        {{if eq .Message "Not found or expired"}}
+          This paste doesn't exist or has expired. It may have been deleted or reached its expiration time.
+        {{else if eq .Message "Internal server error"}}
+          Something went wrong on our end. Please try again later.
+        {{else}}
+          An unexpected error occurred. Please try again.
+        {{end}}
+      </p>
+      
+      <div class="error-actions">
+        <a href="/" class="btn btn-primary">
+          Go Home
+        </a>
+        <button onclick="history.back()" class="btn btn-secondary">
+          Go Back
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .error-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 60vh;
+      animation: slideUp 0.6s ease-out;
+    }
+
+    .error-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xxl);
+      box-shadow: var(--shadow-xl);
+      width: min(480px, 90vw);
+      text-align: center;
+    }
+
+    .error-icon {
+      font-size: 4rem;
+      margin-bottom: var(--space-lg);
+      animation: pulse 2s infinite;
+    }
+
+    .error-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0 0 var(--space-md);
+      color: var(--text-primary);
+    }
+
+    .error-description {
+      color: var(--text-secondary);
+      margin: 0 0 var(--space-xl);
+      line-height: 1.6;
+    }
+
+    .error-actions {
+      display: flex;
+      gap: var(--space-md);
+      justify-content: center;
+    }
+
+    @media (max-width: 480px) {
+      .error-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
 {{end}}

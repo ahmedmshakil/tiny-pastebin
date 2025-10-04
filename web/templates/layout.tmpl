@@ -1,6 +1,6 @@
 {{define "layout"}}
 <!doctype html>
-<html lang="en">
+<html lang="en" class="theme-dark">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,18 +9,67 @@
   <title>{{.Title}}</title>
   <link rel="icon" href="/favicon.ico">
   <link rel="stylesheet" href="/static/app.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script defer src="/static/highlight.min.js"></script>
 </head>
 <body>
-  <header class="site-header">
-    <h1><a href="/">Tiny Pastebin</a></h1>
-  </header>
-  <main class="site-main">
-    {{.Body}}
-  </main>
-  <footer class="site-footer">
-    <p>Self-hosted pastebin – no external services.</p>
-  </footer>
+  <div class="app-container">
+    <header class="site-header">
+      <div class="header-content">
+        <div class="header-left">
+          <h1><a href="/" class="logo">Tiny Pastebin</a></h1>
+          <span class="version">v2.0</span>
+        </div>
+        <div class="header-right">
+          <button class="theme-toggle" id="theme-toggle" title="Toggle theme">
+            <span class="theme-icon">Theme</span>
+          </button>
+          <a href="/" class="new-paste-btn">New Paste</a>
+        </div>
+      </div>
+    </header>
+    
+    <main class="site-main">
+      <div class="main-wrapper">
+        {{.Body}}
+      </div>
+    </main>
+    
+    <footer class="site-footer">
+      <div class="footer-content">
+        <p>Self-hosted pastebin – Your data stays private</p>
+        <div class="footer-links">
+          <span>Secure • Fast • Open Source</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Theme toggle functionality
+    const themeToggle = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+    const themeIcon = themeToggle.querySelector('.theme-icon');
+    
+    // Load saved theme or default to dark
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    html.className = `theme-${savedTheme}`;
+    themeIcon.textContent = savedTheme === 'dark' ? 'Light' : 'Dark';
+    
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = html.className.includes('theme-dark') ? 'dark' : 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      html.className = `theme-${newTheme}`;
+      themeIcon.textContent = newTheme === 'dark' ? 'Light' : 'Dark';
+      localStorage.setItem('theme', newTheme);
+    });
+    
+    // Add smooth animations on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.classList.add('loaded');
+    });
+  </script>
 </body>
 </html>
 {{end}}
